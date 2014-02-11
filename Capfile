@@ -23,3 +23,6 @@ require 'capistrano/deploy'
 
 # Loads custom tasks from `lib/capistrano/tasks' if you have any defined.
 Dir.glob('lib/capistrano/tasks/*.cap').each { |r| import r }
+
+require_relative 'lib/cap_hiera'
+hiera_build_servers_from_stage 'staging'

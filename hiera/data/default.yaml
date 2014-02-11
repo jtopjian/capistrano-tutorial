@@ -1,0 +1,4 @@
+---
+ssh_options:
+  :user: 'ubuntu'
+  :keys: '/path/to/key'
