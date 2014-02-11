@@ -34,6 +34,7 @@ module CapHiera
   end
 
   def hiera_get_server host
+    host = host.to_s
     servers = hiera('servers')
     if not servers.key?(host)
       return nil
