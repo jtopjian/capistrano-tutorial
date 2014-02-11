@@ -7,4 +7,4 @@
   - "default"
 
 :yaml:
-   :datadir: ./hiera/data
+   :datadir: ./modules/hiera/files/data

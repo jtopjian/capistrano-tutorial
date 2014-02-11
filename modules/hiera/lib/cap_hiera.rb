@@ -18,7 +18,7 @@ module CapHiera
     end
 
     begin
-      @@h ||= Hiera.new({:config => './hiera/hiera.yaml'})
+      @@h ||= Hiera.new({:config => './modules/hiera/files/hiera.yaml'})
     rescue Exception => e
       STDERR.puts "Failed to start Hiera: #{e.class}: #{e}"
       exit 1
@@ -27,13 +27,18 @@ module CapHiera
   end
 
   def hiera_build_servers_from_stage stage
-    servers = hiera('servers', {:stage => stage})
-    servers.each do |k,v|
-      server k, v
+    if stage
+      servers = hiera('servers', {:stage => stage})
+      if servers
+        servers.each do |k,v|
+          server k, v
+        end
+      end
     end
   end
 
   def hiera_get_server host
+    host = host.to_s
     servers = hiera('servers')
     if not servers.key?(host)
       return nil
