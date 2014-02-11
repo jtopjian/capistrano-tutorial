@@ -18,7 +18,7 @@ module CapHiera
     end
 
     begin
-      @@h ||= Hiera.new({:config => './hiera/hiera.yaml'})
+      @@h ||= Hiera.new({:config => './modules/hiera/files/hiera.yaml'})
     rescue Exception => e
       STDERR.puts "Failed to start Hiera: #{e.class}: #{e}"
       exit 1
