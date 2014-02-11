@@ -28,4 +28,4 @@ Dir.glob('modules/*/tasks/*.cap').each { |r| import r }
 require_relative 'modules/utils/lib/helpers'
 
 require_relative 'modules/hiera/lib/cap_hiera'
-hiera_build_servers_from_stage 'staging'
+hiera_build_servers_from_stage ARGV[0]
