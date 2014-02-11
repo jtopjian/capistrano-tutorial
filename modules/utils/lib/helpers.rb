@@ -25,6 +25,14 @@ module Helpers
     puts " ERROR #{message}".colorize(:red)
   end
 
+  # Upload and Move
+  def upload_and_move file, source, destination
+    if File.exists?("#{source}/#{file}")
+      upload! "#{source}/#{file}", './'
+      sudo "mv ./#{file} #{destination}"
+    end
+  end
+
 end
 
 include Helpers
