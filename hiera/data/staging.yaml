@@ -1,0 +1,6 @@
+---
+servers:
+  'example.com':
+    :user: 'ubuntu'
+    :roles:
+      - 'web'

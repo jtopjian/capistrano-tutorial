@@ -1,0 +1,10 @@
+---
+:backends:
+  - yaml
+
+:hierarchy:
+  - "%{stage}"
+  - "default"
+
+:yaml:
+   :datadir: ./hiera/data
