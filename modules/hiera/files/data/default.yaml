@@ -2,3 +2,14 @@
 ssh_options:
   :user: 'ubuntu'
   :keys: '/path/to/key'
+
+# Global Server Defaults
+server_defaults:
+  :cloud: 'mycloud'
+  :provider: 'openstack'
+  :private_key: '/path/to/key'
+  :flavor: 'n1.small'
+  :image_id: '4042220e-4f5e-4398-9054-39fbd75a5dd7'
+  :keypair: 'home'
+  :user: 'ubuntu'
+  :security_groups: ['default', 'openstack']
