@@ -1,0 +1,144 @@
+namespace :puppet do
+
+  namespace :bootstrap do
+    desc "Configures repo and installs Puppet on Ubuntu"
+    task :ubuntu do
+      invoke 'puppet:repo:ubuntu'
+      invoke 'puppet:install:ubuntu'
+    end
+  end
+
+  namespace :install do
+    desc "Installs Puppet via apt on Ubuntu"
+    task :ubuntu do
+      on roles(:all) do |host|
+        sudo "apt-get update"
+        sudo "apt-get install -y puppet rsync rubygems"
+        sudo "gem install deep_merge"
+        sudo "gem install r10k"
+        sudo "mkdir -p /etc/puppet/hiera"
+        sudo "sed -i 's/\\[main\\]/\\[main\\]\\npluginsync=true/' /etc/puppet/puppet.conf"
+      end
+    end
+  end
+
+  namespace :repo do
+    desc "Setup the PuppetLabs repo"
+    task :ubuntu do
+      on roles(:all) do |host|
+        sudo "echo deb http://apt.puppetlabs.com/ $(lsb_release -sc) main | sudo tee /etc/apt/sources.list.d/puppet.list"
+        sudo "echo deb http://apt.puppetlabs.com/ $(lsb_release -sc) dependencies | sudo tee -a /etc/apt/sources.list.d/puppet.list"
+        sudo "apt-key adv --keyserver keyserver.ubuntu.com --recv 4BD6EC30"
+      end
+    end
+  end
+
+  desc "Checks the syntax of all *.pp files"
+  task :syntax_check do
+    cap_info "Checking syntax..."
+    errors = {}
+    dir = "modules/puppet/files/#{fetch(:stage)}/"
+    Dir.glob("#{dir}/**/*.pp").map do |p|
+      output = `puppet parser validate #{p} 2>&1`
+      if $?.to_i != 0
+        errors[p] = output
+      end
+      if not errors.empty?
+        cap_error "The following syntax errors were found:"
+        errors.each do |file, error|
+          cap_error file
+          puts error
+          puts ""
+        end
+      end
+    end
+  end
+
+  desc "Pushes the Puppet role manifests, Puppetfile, and hiera data to the server"
+  task :deploy do
+
+    # set the puppet and hiera directories
+    puppet_dir = "modules/puppet/files/#{fetch(:stage)}"
+    hiera_dir  = "modules/hiera/files/data/#{fetch(:stage)}"
+
+    on roles(:all) do |host|
+      cap_info "Deploying Puppet configuration to #{host}"
+
+      # Get the roles of the server
+      roles = host.roles.to_a
+
+      # Create the hiera.yaml configuration
+      require 'tempfile'
+      t = Tempfile.new('cap')
+      render_template("modules/hiera/tpl/hiera.#{fetch(:stage)}.erb", t.path, binding)
+      upload_and_move_if_changed File.basename(t.path), File.dirname(t.path), '/etc/puppet/hiera.yaml'
+      upload_and_move_if_changed File.basename(t.path), File.dirname(t.path), '/etc/hiera.yaml'
+      t.unlink
+
+      # Upload the default hiera file and move it in place
+      upload_and_move_if_changed 'default.yaml', hiera_dir, '/etc/puppet/hiera'
+
+      # If there's a base manifest, upload it
+      # This prevents all servers from requiring a "base" role
+      upload_and_move_if_changed 'base.pp', puppet_dir, '/etc/puppet/manifests'
+
+      # For each role that the server belongs to,
+      roles.each do |role|
+        # upload the manifest
+        upload_and_move_if_changed "#{role}.pp", puppet_dir, '/etc/puppet/manifests'
+
+        # and the hiera data
+        upload_and_move_if_changed "#{role}.yaml", hiera_dir, '/etc/puppet/hiera'
+      end
+
+      # Upload the Puppetfile for the stage and move it in place
+      if md5_diff? 'Puppetfile', puppet_dir, '/etc/puppet'
+        upload_and_move 'Puppetfile', puppet_dir, '/etc/puppet'
+
+        # Run r10k against the Puppetfile
+        within "/etc/puppet" do
+          sudo "r10k puppetfile install"
+        end
+      end
+
+    end
+  end
+
+  desc "Runs puppet apply with --noop"
+  task :noop, [:opts] do |t, args|
+    opts = "--noop "
+    if args.opts
+      args.opts.split(/\s+/).each do |opt|
+        opts += "--#{opt} "
+      end
+    end
+    puppet_apply opts
+  end
+
+  desc "Runs puppet apply on the server"
+  task :apply, [:opts] do |t, args|
+    opts = ""
+    if args.opts
+      args.opts.split(/\s+/).each do |opt|
+        opts += "--#{opt} "
+      end
+    end
+    puppet_apply opts
+  end
+
+  private
+
+  def puppet_apply opts
+    on roles(:all) do |host|
+      if test("[ -f /etc/puppet/manifests/base.pp ]")
+        info "Running puppet apply #{opts} on #{host} for base.pp"
+        puts capture("cd /etc/puppet && sudo puppet apply #{opts} manifests/base.pp")
+      end
+      host.roles.to_a.each do |role|
+        info "Running puppet apply #{opts} on #{host} for #{role}"
+        puts capture("cd /etc/puppet && sudo puppet apply #{opts} manifests/#{role}.pp")
+      end
+    end
+  end
+
+end

@@ -1,0 +1,43 @@
+forge 'http://forge.puppetlabs.com'
+
+mod 'apache',
+  :git => 'https://github.com/puppetlabs/puppetlabs-apache',
+  :ref => '5dc98116c7793c2ef21a158463eea7d62ecfdbd1'
+
+mod 'apt',
+  :git => 'https://github.com/puppetlabs/puppetlabs-apt',
+  :ref => '1.4.0'
+
+mod 'vcsrepo',
+  :git => 'https://github.com/puppetlabs/puppetlabs-vcsrepo',
+  :ref => '0.2.0'
+
+mod 'concat',
+  :git => 'https://github.com/puppetlabs/puppetlabs-concat',
+  :ref => '1.0.0'
+
+mod 'ntp',
+  :git => 'https://github.com/puppetlabs/puppetlabs-ntp',
+  :ref => '3.0.0-rc1'
+
+mod 'sshkeys',
+  :git => 'https://github.com/jtopjian/puppet-sshkeys',
+  :ref => '0.0.2'
+
+mod 'ssh',
+  :git => 'https://github.com/jtopjian/puppet-ssh'
+
+mod 'stdlib',
+  :git => 'https://github.com/puppetlabs/puppetlabs-stdlib',
+  :ref => '4.1.0'
+
+mod 'inifile',
+  :git => 'https://github.com/puppetlabs/puppetlabs-inifile',
+  :ref => '1.0.0'
+
+mod 'acng',
+  :git => 'https://github.com/jtopjian/puppet-acng',
+  :ref => '4981099f0ab5949e5e4bab4ab7d17325950bd505'
+
+mod 'site',
+  :git => 'some.private.server.com'

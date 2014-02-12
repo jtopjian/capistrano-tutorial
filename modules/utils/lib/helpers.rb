@@ -33,6 +33,40 @@ module Helpers
     end
   end
 
+  def upload_and_move_if_changed file, source, destination
+    if File.exists?("#{source}/#{file}")
+      if md5_diff? file, source, destination
+        upload_and_move file, source, destination
+      end
+    end
+  end
+
+  # Calculate the md5 of a local and remote file
+  def md5_diff? file, source, destination
+    f = nil
+    if test("[ -f #{destination} ]")
+      f = destination
+    elsif test("[ -d #{destination} ]")
+      if test("[ -f #{destination}/#{file} ]")
+        f = "#{destination}/#{file}"
+      end
+    end
+
+    if f
+      md5_source = %x(ruby -r 'digest/md5' -e "puts Digest::MD5.file('#{source}/#{file}')").strip!
+      md5_dest = capture(%Q!ruby -r 'digest/md5' -e "puts Digest::MD5.file('#{f}')"!)
+      md5_dest.strip!
+
+      if md5_source != md5_dest
+        return true
+      else
+        return false
+      end
+    else
+      return true
+    end
+  end
+
 end
 
 include Helpers
